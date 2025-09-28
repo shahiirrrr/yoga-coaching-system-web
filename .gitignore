@@ -1,6 +1,14 @@
 *.iml
 .gradle
 /local.properties
+
+# Python environment and secrets
+.env
+.env.*
+.venv/
+.venv310/
+__pycache__/
+*.pyc
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml

@@ -114,9 +114,14 @@ def detectPose(image, pose, display=True):
 
         # Return the output image and the found landmarks.
         return output_image, landmarks
-# Read another sample image and perform pose detection on it.
-image = cv2.imread('unknown.jpg')
-detectPose(image, pose, display=True)
+# Read another sample image and perform pose detection on it (demo only).
+# Wrap in a __main__ guard so this does not run during import.
+if __name__ == "__main__":
+    demo_image = cv2.imread('unknown.jpg')
+    if demo_image is not None:
+        detectPose(demo_image, pose, display=True)
+    else:
+        print("[yoga.py] Demo image 'unknown.jpg' not found; skipping demo pose detection.")
 
 
 def calculateAngle(landmark1, landmark2, landmark3):

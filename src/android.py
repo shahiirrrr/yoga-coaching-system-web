@@ -2,13 +2,16 @@ import smtplib
 from email.mime.text import MIMEText
 from src.em1 import camclick
 from flask import *
+import os
+from dotenv import load_dotenv
 
 app=Flask(__name__)
+load_dotenv()
+
 from src.dbconnection import *
 
 
-
-@app.route('/Register',methods=['post'])
+@app.route('/Register', methods=['post'])
 def Register():
     fname = request.form['fname']
     lname = request.form['lname']
@@ -25,24 +28,9 @@ def Register():
     val = (uname, passw)
     id = iud(qry, val)
     qry1 = "INSERT INTO `user_table` VALUES(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    val1 = (str(id), fname, lname, gender, dob, phone, email,height,weight, health)
+    val1 = (str(id), fname, lname, gender, dob, phone, email, height, weight, health)
     iud(qry1, val1)
     return jsonify({'task': 'valid'})
-
-
-@app.route('/login', methods=['post'])
-def login():
-    username = request.form['uname']
-    password = request.form['pass']
-    qry = 'SELECT * FROM `login_table` WHERE `USER_NAME`=%s AND `PASSWORD`=%s'
-    val = (username, password)
-    res = selectone(qry, val)
-    print(res,"=============")
-    if res is None:
-        return jsonify({'task': 'invalid','lid':0})
-    else:
-        id = res['LOGIN_ID']
-        return jsonify({'task': 'success', 'lid': id})
 
 @app.route('/forget_password', methods=['get', 'post'])
 def forget_password():
@@ -59,10 +47,17 @@ def forget_password():
             return jsonify({'task': 'invalid email'})
         else:
             try:
-                gmail = smtplib.SMTP('smtp.gmail.com', 587)
+                smtp_host = os.getenv('SMTP_HOST', 'smtp.gmail.com')
+                smtp_port = int(os.getenv('SMTP_PORT', '587'))
+                smtp_user = os.getenv('SMTP_USER')
+                smtp_password = os.getenv('SMTP_PASSWORD')
+                smtp_from = os.getenv('SMTP_FROM', smtp_user if smtp_user else 'noreply@example.com')
+
+                gmail = smtplib.SMTP(smtp_host, smtp_port)
                 gmail.ehlo()
                 gmail.starttls()
-                gmail.login('shahirfarhan2003@gmail.com', 'ekwobnyardsxlsla')
+                if smtp_user and smtp_password:
+                    gmail.login(smtp_user, smtp_password)
                 print("login=======")
             except Exception as e:
                 print("Couldn't setup email!!" + str(e))
@@ -70,7 +65,7 @@ def forget_password():
             print(msg)
             msg['Subject'] = 'your password'
             msg['To'] = email
-            msg['From'] = 'shahirfarhan2003@gmail.com'
+            msg['From'] = smtp_from
 
             print("ok====")
 
@@ -82,9 +77,7 @@ def forget_password():
     except Exception as e:
         print(e)
         return jsonify({"task": "invalid"})
-
-
-@app.route('/view_video',methods=['post'])
+@app.route('/view_video', methods=['post'])
 def view_video():
     id=request.form['lid']
     qry="SELECT * FROM `video_table`  JOIN `trainer_table` ON `trainer_table`.`LOGIN_ID`=`video_table`.`trainer_id` JOIN `request` ON `request`.`tid`=`trainer_table`.`LOGIN_ID` WHERE `request`.`uid`=%s AND `request`.`status`='Accepted'"
